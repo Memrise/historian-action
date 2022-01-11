@@ -1,0 +1,113 @@
+/*
+ * Copyright 2022 Memrise Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import {Commit} from './interfaces'
+import {context} from '@actions/github'
+
+function firstLine(input: string): string {
+  return input.split('\n')[0]
+}
+
+function getPullRequestUrl(pull_id: string): string {
+  return `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/pull/${pull_id}`
+}
+
+function formatMessage(input: string, slackLinks: boolean): string {
+  return firstLine(input).replace(/#(\d+)/, (match, p1) => {
+    if (slackLinks) return `<${getPullRequestUrl(p1)}|#${p1}>`
+    return `[#${p1}](${getPullRequestUrl(p1)})`
+  })
+}
+
+function getAuthor(commit: Commit): string {
+  if (commit.commit.author && commit.commit.author.name) {
+    return commit.commit.author.name
+  }
+  return 'Unknown'
+}
+
+function getShortRef(ref: string): string {
+  if (ref.match(/[\da-fA-F]{40}/)) {
+    return ref.substring(0, 10)
+  }
+  return ref
+}
+
+export function getPlainTextFormat(commits: Commit[]): string {
+  const lines = []
+
+  for (const commit of commits) {
+    lines.push(`${getShortRef(commit.sha)}: ${firstLine(commit.commit.message)} (${getAuthor(commit)})`)
+  }
+
+  return lines.join('\n')
+}
+
+export function getMarkdownFormat(commits: Commit[]): string {
+  const lines = []
+
+  for (const commit of commits) {
+    lines.push(
+      `[\`${getShortRef(commit.sha)}\`](${commit.html_url}) ${formatMessage(commit.commit.message, false)} (${getAuthor(
+        commit
+      )})`
+    )
+  }
+
+  return lines.join('\n')
+}
+
+export function getSlackFormat(commits: Commit[], since: string, until: string): string {
+  const lines = []
+
+  for (const commit of commits) {
+    lines.push(
+      `<${commit.html_url}|\`${getShortRef(commit.sha)}\`> ${formatMessage(commit.commit.message, true)} (${getAuthor(
+        commit
+      )})`
+    )
+  }
+
+  const result = {
+    blocks: [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: `Changes from ${getShortRef(since)} to ${getShortRef(until)}`
+        }
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: `<${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/compare/${since}...${until}|See the changes on GitHub>`
+          }
+        ]
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: lines.join('\n')
+        }
+      }
+    ]
+  }
+
+  return JSON.stringify(result)
+}

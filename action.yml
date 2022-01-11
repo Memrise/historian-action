@@ -1,0 +1,27 @@
+---
+name: Historian
+description: Collects changes between two revisions
+author: Memrise
+inputs:
+  token:
+    description: GitHub API token, used for getting the list of commits
+    required: true
+    default: ${{ github.token }}
+  since:
+    description: Commit-ish to get changes since (defaults to the most recent release)
+  until:
+    description: Commit-ish to get changes until (defaults to HEAD)
+    default: HEAD
+  chronological:
+    description: Output changes in chronological order
+    default: true
+outputs:
+  plain-text:
+    description: Changes listed in a plain-text format
+  markdown:
+    description: Changes listed in Markdown format
+  slack:
+    description: Changes prepared in a Slack-payload friendly format
+runs:
+  using: node16
+  main: dist/index.js
