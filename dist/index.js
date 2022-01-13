@@ -159,16 +159,41 @@ const core = __importStar(__nccwpck_require__(2186));
 const formatting = __importStar(__nccwpck_require__(5293));
 const github_1 = __nccwpck_require__(5438);
 async function getMostRecentRelease(octokit) {
-    const { data: { tag_name } } = await octokit.rest.repos.getLatestRelease({
-        owner: github_1.context.repo.owner,
-        repo: github_1.context.repo.repo
-    });
-    return tag_name;
+    try {
+        const { data: { tag_name } } = await octokit.rest.repos.getLatestRelease({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo
+        });
+        return tag_name;
+    }
+    catch (e) {
+        return '';
+    }
+}
+async function getMostRecentTag(octokit) {
+    /*
+     * This assumes undocumented behaviour from GitHub's API,
+     * where the first tag returned is the most recently created one.
+     */
+    try {
+        const { data } = await octokit.rest.repos.listTags({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            per_page: 1
+        });
+        return data[0].name;
+    }
+    catch (e) {
+        return '';
+    }
 }
 async function run() {
     const octokit = (0, github_1.getOctokit)(core.getInput('token', { required: true }));
-    const since = core.getInput('since') || (await getMostRecentRelease(octokit));
+    const since = core.getInput('since') || (await getMostRecentRelease(octokit)) || (await getMostRecentTag(octokit));
     const until = core.getInput('until', { required: true });
+    if (!since) {
+        core.setFailed("`since` was not set and a reasonable default couldn't be established");
+    }
     const { data: { commits } } = await octokit.rest.repos.compareCommitsWithBasehead({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,

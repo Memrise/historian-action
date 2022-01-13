@@ -20,21 +20,48 @@ import {context, getOctokit} from '@actions/github'
 import {GitHub} from '@actions/github/lib/utils'
 
 async function getMostRecentRelease(octokit: InstanceType<typeof GitHub>): Promise<string> {
-  const {
-    data: {tag_name}
-  } = await octokit.rest.repos.getLatestRelease({
-    owner: context.repo.owner,
-    repo: context.repo.repo
-  })
+  try {
+    const {
+      data: {tag_name}
+    } = await octokit.rest.repos.getLatestRelease({
+      owner: context.repo.owner,
+      repo: context.repo.repo
+    })
 
-  return tag_name
+    return tag_name
+  } catch (e) {
+    return ''
+  }
+}
+
+async function getMostRecentTag(octokit: InstanceType<typeof GitHub>): Promise<string> {
+  /*
+   * This assumes undocumented behaviour from GitHub's API,
+   * where the first tag returned is the most recently created one.
+   */
+
+  try {
+    const {data} = await octokit.rest.repos.listTags({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      per_page: 1
+    })
+
+    return data[0].name
+  } catch (e) {
+    return ''
+  }
 }
 
 async function run(): Promise<void> {
   const octokit = getOctokit(core.getInput('token', {required: true}))
 
-  const since = core.getInput('since') || (await getMostRecentRelease(octokit))
+  const since = core.getInput('since') || (await getMostRecentRelease(octokit)) || (await getMostRecentTag(octokit))
   const until = core.getInput('until', {required: true})
+
+  if (!since) {
+    core.setFailed("`since` was not set and a reasonable default couldn't be established")
+  }
 
   const {
     data: {commits}
