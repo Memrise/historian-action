@@ -57,7 +57,7 @@ async function run(): Promise<void> {
   const octokit = getOctokit(core.getInput('token', {required: true}))
 
   const since = core.getInput('since') || (await getMostRecentRelease(octokit)) || (await getMostRecentTag(octokit))
-  const until = core.getInput('until', {required: true})
+  let until = core.getInput('until', {required: true})
 
   if (!since) {
     core.setFailed("`since` was not set and a reasonable default couldn't be established")
@@ -70,6 +70,22 @@ async function run(): Promise<void> {
     repo: context.repo.repo,
     basehead: `${since}...${until}`
   })
+
+  if (commits.length === 0) {
+    core.info(`No commits were found between ${since} and ${until}. Outputs will be empty.`)
+
+    core.setOutput('plain-text', '')
+    core.setOutput('markdown', '')
+    core.setOutput('slack', '')
+
+    return
+  }
+
+  if (until === 'HEAD') {
+    // If `until` was 'HEAD' we change it to be the SHA of the most recent commit
+    // so the links to GitHub become stable
+    until = commits.slice(-1)[0].sha
+  }
 
   if (!core.getBooleanInput('chronological')) {
     commits.reverse()
