@@ -79,6 +79,21 @@ export function getSlackFormat(commits: Commit[], since: string, until: string):
         commit
       )})`
     )
+
+    // Slack imposes a 3000 character limit, check if we are near it
+    if (lines.join('\n').length > 2900) {
+      // We are, so remove the last commit added and stop adding any more
+      lines.pop()
+      break
+    }
+  }
+
+  // Check if commits were truncated
+  const truncatedCommits = commits.length - lines.length
+  if (truncatedCommits) {
+    lines.push(
+      `\n${truncatedCommits} were skipped due to message length limits. See the full list of changes via the GitHub link.`
+    )
   }
 
   const result = {
