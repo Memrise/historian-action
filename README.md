@@ -18,7 +18,7 @@ Three different output formats are supplied, plain text, Markdown and for Slack.
     # The commit SHA, tag or branch to use as the starting point when looking for commits.
     # The commit referenced here will not be included in the output.
     #
-    # Default: The most recent tag on the repository
+    # Default: The most recent tag, or the one before that if `until` points at the same commit
     since: ''
 
     # The commit SHA, tag or branch to use as the end point when looking for commits.

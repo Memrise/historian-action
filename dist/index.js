@@ -171,30 +171,36 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const formatting = __importStar(__nccwpck_require__(5293));
 const github_1 = __nccwpck_require__(5438);
-async function getMostRecentRelease(octokit) {
-    try {
-        const { data: { tag_name } } = await octokit.rest.repos.getLatestRelease({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo
-        });
-        return tag_name;
-    }
-    catch (e) {
-        return '';
-    }
+async function resolveHead(octokit) {
+    const { data } = await octokit.rest.repos.getCommit({
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
+        ref: 'HEAD'
+    });
+    return data.sha;
 }
-async function getMostRecentTag(octokit) {
+async function getPreviousTag(octokit, notThis) {
     /*
      * This assumes undocumented behaviour from GitHub's API,
-     * where the first tag returned is the most recently created one.
+     * where the tags are returned in reverse chronological order.
+     *
+     * notThis refers to a commit or tag that we don't want returned.
      */
     try {
         const { data } = await octokit.rest.repos.listTags({
             owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            per_page: 1
+            repo: github_1.context.repo.repo
         });
-        return data[0].name;
+        for (const tag of data) {
+            // Make sure notThis isn't a tag that matches
+            if (tag.name === notThis)
+                continue;
+            // Make sure notThis isn't a commit that matches (also handles shortened commit SHAs)
+            if (tag.commit.sha.startsWith(notThis))
+                continue;
+            return tag.name;
+        }
+        return '';
     }
     catch (e) {
         return '';
@@ -202,11 +208,15 @@ async function getMostRecentTag(octokit) {
 }
 async function run() {
     const octokit = (0, github_1.getOctokit)(core.getInput('token', { required: true }));
-    const since = core.getInput('since') || (await getMostRecentRelease(octokit)) || (await getMostRecentTag(octokit));
+    // Resolve HEAD to a commit if that was passed as input
     let until = core.getInput('until', { required: true });
-    const slackTemplate = core.getInput('slack template');
+    if (until === 'HEAD') {
+        until = await resolveHead(octokit);
+    }
+    const since = core.getInput('since') || (await getPreviousTag(octokit, until));
     if (!since) {
         core.setFailed("`since` was not set and a reasonable default couldn't be established");
+        return;
     }
     const { data: { commits } } = await octokit.rest.repos.compareCommitsWithBasehead({
         owner: github_1.context.repo.owner,
@@ -220,17 +230,12 @@ async function run() {
         core.setOutput('slack', '');
         return;
     }
-    if (until === 'HEAD') {
-        // If `until` was 'HEAD' we change it to be the SHA of the most recent commit
-        // so the links to GitHub become stable
-        until = commits.slice(-1)[0].sha;
-    }
     if (!core.getBooleanInput('chronological')) {
         commits.reverse();
     }
     core.setOutput('plain-text', formatting.getPlainTextFormat(commits));
     core.setOutput('markdown', formatting.getMarkdownFormat(commits));
-    core.setOutput('slack', formatting.getSlackFormat(commits, since, until, slackTemplate));
+    core.setOutput('slack', formatting.getSlackFormat(commits, since, until, core.getInput('slack template')));
 }
 run();
 
