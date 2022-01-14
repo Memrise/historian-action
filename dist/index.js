@@ -204,7 +204,7 @@ async function run() {
     const octokit = (0, github_1.getOctokit)(core.getInput('token', { required: true }));
     const since = core.getInput('since') || (await getMostRecentRelease(octokit)) || (await getMostRecentTag(octokit));
     let until = core.getInput('until', { required: true });
-    const slackTemplate = core.getInput('slacktemplate');
+    const slackTemplate = core.getInput('slack template');
     if (!since) {
         core.setFailed("`since` was not set and a reasonable default couldn't be established");
     }

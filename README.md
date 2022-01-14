@@ -42,7 +42,7 @@ Three different output formats are supplied, plain text, Markdown and for Slack.
     # - until.short
     #
     # Default: *Changes from {since.short} to {until.short}*
-    slacktemplate: ''
+    slack template: ''
 ```
 
 
