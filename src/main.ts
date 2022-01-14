@@ -47,6 +47,7 @@ async function run(): Promise<void> {
 
   if (!since) {
     core.setFailed("`since` was not set and a reasonable default couldn't be established")
+    return
   }
 
   const {
