@@ -8,7 +8,10 @@ inputs:
     required: true
     default: ${{ github.token }}
   since:
-    description: Commit-ish to get changes since (defaults to the most recent release or tag)
+    description: |
+      Commit-ish to get changes since.
+
+      Defaults to the most recent tag, or the one before that if `until` points at the same commit.
   until:
     description: Commit-ish to get changes until (defaults to HEAD)
     default: HEAD
