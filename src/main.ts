@@ -19,21 +19,6 @@ import * as formatting from './formatting'
 import {context, getOctokit} from '@actions/github'
 import {GitHub} from '@actions/github/lib/utils'
 
-async function getMostRecentRelease(octokit: InstanceType<typeof GitHub>): Promise<string> {
-  try {
-    const {
-      data: {tag_name}
-    } = await octokit.rest.repos.getLatestRelease({
-      owner: context.repo.owner,
-      repo: context.repo.repo
-    })
-
-    return tag_name
-  } catch (e) {
-    return ''
-  }
-}
-
 async function getMostRecentTag(octokit: InstanceType<typeof GitHub>): Promise<string> {
   /*
    * This assumes undocumented behaviour from GitHub's API,
@@ -56,7 +41,7 @@ async function getMostRecentTag(octokit: InstanceType<typeof GitHub>): Promise<s
 async function run(): Promise<void> {
   const octokit = getOctokit(core.getInput('token', {required: true}))
 
-  const since = core.getInput('since') || (await getMostRecentRelease(octokit)) || (await getMostRecentTag(octokit))
+  const since = core.getInput('since') || (await getMostRecentTag(octokit))
   let until = core.getInput('until', {required: true})
   const slackTemplate = core.getInput('slack template')
 
