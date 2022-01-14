@@ -16,6 +16,7 @@
 
 import {Commit} from './interfaces'
 import {context} from '@actions/github'
+import pupa from 'pupa'
 
 function firstLine(input: string): string {
   return input.split('\n')[0]
@@ -70,7 +71,7 @@ export function getMarkdownFormat(commits: Commit[]): string {
   return lines.join('\n')
 }
 
-export function getSlackFormat(commits: Commit[], since: string, until: string): string {
+export function getSlackFormat(commits: Commit[], since: string, until: string, slackTemplate: string): string {
   const lines = []
 
   for (const commit of commits) {
@@ -92,17 +93,33 @@ export function getSlackFormat(commits: Commit[], since: string, until: string):
   const truncatedCommits = commits.length - lines.length
   if (truncatedCommits) {
     lines.push(
-      `\n${truncatedCommits} were skipped due to message length limits. See the full list of changes via the GitHub link.`
+      `\n${truncatedCommits} were skipped due to message length limits. See the full list of changes via the link below.`
     )
   }
 
   const result = {
     blocks: [
       {
-        type: 'header',
+        type: 'section',
         text: {
-          type: 'plain_text',
-          text: `Changes from ${getShortRef(since)} to ${getShortRef(until)}`
+          type: 'mrkdwn',
+          text: pupa(slackTemplate, {
+            since: {
+              full: since,
+              short: getShortRef(since)
+            },
+            until: {
+              full: until,
+              short: getShortRef(until)
+            }
+          })
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: lines.join('\n')
         }
       },
       {
@@ -113,13 +130,6 @@ export function getSlackFormat(commits: Commit[], since: string, until: string):
             text: `<${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/compare/${since}...${until}|See the changes on GitHub>`
           }
         ]
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: lines.join('\n')
-        }
       }
     ]
   }
