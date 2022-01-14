@@ -31,6 +31,18 @@ Three different output formats are supplied, plain text, Markdown and for Slack.
     #
     # Default: true
     chronological: ''
+
+    # Template for the message to be included before the list of changes to Slack.
+    #
+    # Supports Markdown and makes the following variables available:
+    #
+    # - since.full
+    # - since.short
+    # - until.full
+    # - until.short
+    #
+    # Default: *Changes from {since.short} to {until.short}*
+    slacktemplate: ''
 ```
 
 

@@ -2,7 +2,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 5293:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
@@ -21,9 +21,13 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getSlackFormat = exports.getMarkdownFormat = exports.getPlainTextFormat = void 0;
 const github_1 = __nccwpck_require__(5438);
+const pupa_1 = __importDefault(__nccwpck_require__(7491));
 function firstLine(input) {
     return input.split('\n')[0];
 }
@@ -65,7 +69,7 @@ function getMarkdownFormat(commits) {
     return lines.join('\n');
 }
 exports.getMarkdownFormat = getMarkdownFormat;
-function getSlackFormat(commits, since, until) {
+function getSlackFormat(commits, since, until, slackTemplate) {
     const lines = [];
     for (const commit of commits) {
         lines.push(`<${commit.html_url}|\`${getShortRef(commit.sha)}\`> ${formatMessage(commit.commit.message, true)} (${getAuthor(commit)})`);
@@ -79,15 +83,31 @@ function getSlackFormat(commits, since, until) {
     // Check if commits were truncated
     const truncatedCommits = commits.length - lines.length;
     if (truncatedCommits) {
-        lines.push(`\n${truncatedCommits} were skipped due to message length limits. See the full list of changes via the GitHub link.`);
+        lines.push(`\n${truncatedCommits} were skipped due to message length limits. See the full list of changes via the link below.`);
     }
     const result = {
         blocks: [
             {
-                type: 'header',
+                type: 'section',
                 text: {
-                    type: 'plain_text',
-                    text: `Changes from ${getShortRef(since)} to ${getShortRef(until)}`
+                    type: 'mrkdwn',
+                    text: (0, pupa_1.default)(slackTemplate, {
+                        since: {
+                            full: since,
+                            short: getShortRef(since)
+                        },
+                        until: {
+                            full: until,
+                            short: getShortRef(until)
+                        }
+                    })
+                }
+            },
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: lines.join('\n')
                 }
             },
             {
@@ -98,13 +118,6 @@ function getSlackFormat(commits, since, until) {
                         text: `<${github_1.context.serverUrl}/${github_1.context.repo.owner}/${github_1.context.repo.repo}/compare/${since}...${until}|See the changes on GitHub>`
                     }
                 ]
-            },
-            {
-                type: 'section',
-                text: {
-                    type: 'mrkdwn',
-                    text: lines.join('\n')
-                }
             }
         ]
     };
@@ -191,6 +204,7 @@ async function run() {
     const octokit = (0, github_1.getOctokit)(core.getInput('token', { required: true }));
     const since = core.getInput('since') || (await getMostRecentRelease(octokit)) || (await getMostRecentTag(octokit));
     let until = core.getInput('until', { required: true });
+    const slackTemplate = core.getInput('slacktemplate');
     if (!since) {
         core.setFailed("`since` was not set and a reasonable default couldn't be established");
     }
@@ -216,7 +230,7 @@ async function run() {
     }
     core.setOutput('plain-text', formatting.getPlainTextFormat(commits));
     core.setOutput('markdown', formatting.getMarkdownFormat(commits));
-    core.setOutput('slack', formatting.getSlackFormat(commits, since, until));
+    core.setOutput('slack', formatting.getSlackFormat(commits, since, until, slackTemplate));
 }
 run();
 
@@ -4213,6 +4227,47 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
+/***/ 4743:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+exports.htmlEscape = string => string
+	.replace(/&/g, '&amp;')
+	.replace(/"/g, '&quot;')
+	.replace(/'/g, '&#39;')
+	.replace(/</g, '&lt;')
+	.replace(/>/g, '&gt;');
+
+exports.htmlUnescape = htmlString => htmlString
+	.replace(/&gt;/g, '>')
+	.replace(/&lt;/g, '<')
+	.replace(/&#0?39;/g, '\'')
+	.replace(/&quot;/g, '"')
+	.replace(/&amp;/g, '&');
+
+exports.htmlEscapeTag = (strings, ...values) => {
+	let output = strings[0];
+	for (let i = 0; i < values.length; i++) {
+		output = output + exports.htmlEscape(String(values[i])) + strings[i + 1];
+	}
+
+	return output;
+};
+
+exports.htmlUnescapeTag = (strings, ...values) => {
+	let output = strings[0];
+	for (let i = 0; i < values.length; i++) {
+		output = output + exports.htmlUnescape(String(values[i])) + strings[i + 1];
+	}
+
+	return output;
+};
+
+
+/***/ }),
+
 /***/ 3287:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -8145,6 +8200,53 @@ function onceStrict (fn) {
   f.called = false
   return f
 }
+
+
+/***/ }),
+
+/***/ 7491:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const {htmlEscape} = __nccwpck_require__(4743);
+
+module.exports = (template, data) => {
+	if (typeof template !== 'string') {
+		throw new TypeError(`Expected a \`string\` in the first argument, got \`${typeof template}\``);
+	}
+
+	if (typeof data !== 'object') {
+		throw new TypeError(`Expected an \`object\` or \`Array\` in the second argument, got \`${typeof data}\``);
+	}
+
+	// The regex tries to match either a number inside `{{ }}` or a valid JS identifier or key path.
+	const doubleBraceRegex = /{{(\d+|[a-z$_][a-z\d$_]*?(?:\.[a-z\d$_]*?)*?)}}/gi;
+
+	if (doubleBraceRegex.test(template)) {
+		template = template.replace(doubleBraceRegex, (_, key) => {
+			let result = data;
+
+			for (const property of key.split('.')) {
+				result = result ? result[property] : '';
+			}
+
+			return htmlEscape(String(result));
+		});
+	}
+
+	const braceRegex = /{(\d+|[a-z$_][a-z\d$_]*?(?:\.[a-z\d$_]*?)*?)}/gi;
+
+	return template.replace(braceRegex, (_, key) => {
+		let result = data;
+
+		for (const property of key.split('.')) {
+			result = result ? result[property] : '';
+		}
+
+		return String(result);
+	});
+};
 
 
 /***/ }),
