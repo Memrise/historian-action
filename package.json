@@ -30,7 +30,7 @@
     "pupa": "^2.1.1"
   },
   "devDependencies": {
-    "@types/node": "^16.11.25",
+    "@types/node": "^16.11.26",
     "@types/rewire": "^2.5.28",
     "@typescript-eslint/parser": "^5.12.1",
     "@vercel/ncc": "^0.33.3",
