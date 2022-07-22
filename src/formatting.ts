@@ -16,6 +16,7 @@
 
 import {Commit} from './interfaces'
 import {context} from '@actions/github'
+import {formatInTimeZone} from 'date-fns-tz'
 import pupa from 'pupa'
 
 function firstLine(input: string): string {
@@ -97,6 +98,8 @@ export function getSlackFormat(commits: Commit[], since: string, until: string, 
     )
   }
 
+  const now = new Date()
+
   const result = {
     blocks: [
       {
@@ -104,10 +107,13 @@ export function getSlackFormat(commits: Commit[], since: string, until: string, 
         text: {
           type: 'mrkdwn',
           text: pupa(slackTemplate, {
+            date: formatInTimeZone(now, 'UTC', 'YYYY-MM-DD'),
             since: {
               full: since,
               short: getShortRef(since)
             },
+            time: formatInTimeZone(now, 'UTC', 'HH:mm:ss'),
+            timeNoSeconds: formatInTimeZone(now, 'UTC', 'HH:mm'),
             until: {
               full: until,
               short: getShortRef(until)
