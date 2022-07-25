@@ -36,10 +36,15 @@ Three different output formats are supplied, plain text, Markdown and for Slack.
     #
     # Supports Markdown and makes the following variables available:
     #
+    # - date
     # - since.full
     # - since.short
+    # - time
+    # - timeNoSeconds
     # - until.full
     # - until.short
+
+    # Date and times are the current time in UTC.
     #
     # Default: *Changes from {since.short} to {until.short}*
     slack template: ''
