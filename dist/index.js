@@ -94,7 +94,7 @@ function getSlackFormat(commits, since, until, slackTemplate) {
                 text: {
                     type: 'mrkdwn',
                     text: (0, pupa_1.default)(slackTemplate, {
-                        date: (0, date_fns_tz_1.formatInTimeZone)(now, 'UTC', 'YYYY-MM-DD'),
+                        date: (0, date_fns_tz_1.formatInTimeZone)(now, 'UTC', 'yyyy-MM-dd'),
                         since: {
                             full: since,
                             short: getShortRef(since)
