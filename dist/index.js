@@ -13056,7 +13056,12 @@ function tzIntlTimeZoneName(length, date, options) {
 
 function partsTimeZone(dtf, date) {
   var formatted = dtf.formatToParts(date);
-  return formatted[formatted.length - 1].value;
+
+  for (var i = formatted.length - 1; i >= 0; --i) {
+    if (formatted[i].type === 'timeZoneName') {
+      return formatted[i].value;
+    }
+  }
 }
 
 function hackyTimeZone(dtf, date) {
@@ -13317,7 +13322,7 @@ function getDateTimeFormat(timeZone) {
       hour12: false,
       timeZone: 'America/New_York',
       year: 'numeric',
-      month: '2-digit',
+      month: 'numeric',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
@@ -13328,7 +13333,7 @@ function getDateTimeFormat(timeZone) {
       hour12: false,
       timeZone: timeZone,
       year: 'numeric',
-      month: '2-digit',
+      month: 'numeric',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
@@ -13337,7 +13342,7 @@ function getDateTimeFormat(timeZone) {
       hourCycle: 'h23',
       timeZone: timeZone,
       year: 'numeric',
-      month: '2-digit',
+      month: 'numeric',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
