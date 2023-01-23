@@ -43,7 +43,7 @@ Three different output formats are supplied, plain text, Markdown and for Slack.
     # - timeNoSeconds
     # - until.full
     # - until.short
-
+    #
     # Date and times are the current time in UTC.
     #
     # Default: *Changes from {since.short} to {until.short}*
