@@ -13137,7 +13137,7 @@ function tzParseTimezone(timezoneString, date, isUtcDate) {
   var token;
   var absoluteOffset; // Empty string
 
-  if (timezoneString === '') {
+  if (!timezoneString) {
     return 0;
   } // Z
 
@@ -13837,7 +13837,7 @@ var tzFormattingTokensRegExp = /([xXOz]+)|''|'(''|[^'])+('|$)/g;
  *
  * - Characters are now escaped using single quote symbols (`'`) instead of square brackets.
  *
- * @param {Date|String|Number} date - the original date
+ * @param {Date|Number} date - the original date
  * @param {String} format - the string of tokens
  * @param {OptionsWithTZ} [options] - the object with options. See [Options]{@link https://date-fns.org/docs/Options}
  * @param {0|1|2} [options.additionalDigits=2] - passed to `toDate`. See [toDate]{@link
