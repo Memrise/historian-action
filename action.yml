@@ -44,5 +44,5 @@ outputs:
   slack:
     description: Changes prepared in a Slack-payload friendly format
 runs:
-  using: node16
+  using: node20
   main: dist/index.js
