@@ -8,7 +8,7 @@ Three different output formats are supplied, plain text, Markdown and for Slack.
 ## Usage
 
 ```yaml
-- uses: Memrise/historian-action@v1
+- uses: Memrise/historian-action@v2
   with:
     # GitHub API token. Only requires read-only access to the repository.
     #
