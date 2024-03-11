@@ -33732,7 +33732,7 @@ var patterns = {
   timezone: /([Z+-].*)$/,
   timezoneZ: /^(Z)$/,
   timezoneHH: /^([+-]\d{2})$/,
-  timezoneHHMM: /^([+-]\d{2}):?(\d{2})$/
+  timezoneHHMM: /^([+-])(\d{2}):?(\d{2})$/
 }; // Parse various time zone offset formats to an offset in milliseconds
 
 function tzParseTimezone(timezoneString, date, isUtcDate) {
@@ -33768,15 +33768,15 @@ function tzParseTimezone(timezoneString, date, isUtcDate) {
   token = patterns.timezoneHHMM.exec(timezoneString);
 
   if (token) {
-    hours = parseInt(token[1], 10);
-    var minutes = parseInt(token[2], 10);
+    hours = parseInt(token[2], 10);
+    var minutes = parseInt(token[3], 10);
 
     if (!validateTimezone(hours, minutes)) {
       return NaN;
     }
 
     absoluteOffset = Math.abs(hours) * MILLISECONDS_IN_HOUR + minutes * MILLISECONDS_IN_MINUTE;
-    return hours > 0 ? -absoluteOffset : absoluteOffset;
+    return token[1] === '+' ? -absoluteOffset : absoluteOffset;
   } // IANA time zone
 
 
@@ -33925,7 +33925,7 @@ function partsOffset(dtf, date) {
 }
 
 function hackyOffset(dtf, date) {
-  var formatted = dtf.format(date).replace(/\u200E/g, '');
+  var formatted = dtf.format(date);
   var parsed = /(\d+)\/(\d+)\/(\d+),? (\d+):(\d+):(\d+)/.exec(formatted); // var [, fMonth, fDay, fYear, fHour, fMinute, fSecond] = parsed
   // return [fYear, fMonth, fDay, fHour, fMinute, fSecond]
 
@@ -33941,10 +33941,10 @@ function getDateTimeFormat(timeZone) {
   if (!dtfCache[timeZone]) {
     // New browsers use `hourCycle`, IE and Chrome <73 does not support it and uses `hour12`
     var testDateFormatted = new Intl.DateTimeFormat('en-US', {
-      hour12: false,
+      hourCycle: 'h23',
       timeZone: 'America/New_York',
       year: 'numeric',
-      month: 'numeric',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
@@ -33952,7 +33952,7 @@ function getDateTimeFormat(timeZone) {
     }).format(new Date('2014-06-25T04:00:00.123Z'));
     var hourCycleSupported = testDateFormatted === '06/25/2014, 00:00:00' || testDateFormatted === '‎06‎/‎25‎/‎2014‎ ‎00‎:‎00‎:‎00';
     dtfCache[timeZone] = hourCycleSupported ? new Intl.DateTimeFormat('en-US', {
-      hour12: false,
+      hourCycle: 'h23',
       timeZone: timeZone,
       year: 'numeric',
       month: 'numeric',
@@ -33961,7 +33961,7 @@ function getDateTimeFormat(timeZone) {
       minute: '2-digit',
       second: '2-digit'
     }) : new Intl.DateTimeFormat('en-US', {
-      hourCycle: 'h23',
+      hour12: false,
       timeZone: timeZone,
       year: 'numeric',
       month: 'numeric',
@@ -34000,7 +34000,7 @@ var MILLISECONDS_IN_MINUTE = 60 * 1000;
 var formatters = {
   // Timezone (ISO-8601. If offset is 0, output is always `'Z'`)
   X: function (date, token, localize, options) {
-    var timezoneOffset = getTimeZoneOffset(options.timeZone, options._originalDate || date);
+    var timezoneOffset = getTimeZoneOffset(options.timeZone, date);
 
     if (timezoneOffset === 0) {
       return 'Z';
@@ -34031,7 +34031,7 @@ var formatters = {
   },
   // Timezone (ISO-8601. If offset is 0, output is `'+00:00'` or equivalent)
   x: function (date, token, localize, options) {
-    var timezoneOffset = getTimeZoneOffset(options.timeZone, options._originalDate || date);
+    var timezoneOffset = getTimeZoneOffset(options.timeZone, date);
 
     switch (token) {
       // Hours and optional minutes
@@ -34058,7 +34058,7 @@ var formatters = {
   },
   // Timezone (GMT)
   O: function (date, token, localize, options) {
-    var timezoneOffset = getTimeZoneOffset(options.timeZone, options._originalDate || date);
+    var timezoneOffset = getTimeZoneOffset(options.timeZone, date);
 
     switch (token) {
       // Short
@@ -34075,19 +34075,17 @@ var formatters = {
   },
   // Timezone (specific non-location)
   z: function (date, token, localize, options) {
-    var originalDate = options._originalDate || date;
-
     switch (token) {
       // Short
       case 'z':
       case 'zz':
       case 'zzz':
-        return (0, _index.default)('short', originalDate, options);
+        return (0, _index.default)('short', date, options);
       // Long
 
       case 'zzzz':
       default:
-        return (0, _index.default)('long', originalDate, options);
+        return (0, _index.default)('long', date, options);
     }
   }
 };
@@ -34131,7 +34129,7 @@ function formatTimezoneWithOptionalMinutes(offset, dirtyDelimeter) {
   return formatTimezone(offset, dirtyDelimeter);
 }
 
-function formatTimezoneShort(offset, dirtyDelimeter) {
+function formatTimezoneShort(offset, dirtyDelimiter) {
   var sign = offset > 0 ? '-' : '+';
   var absOffset = Math.abs(offset);
   var hours = Math.floor(absOffset / 60);
@@ -34141,8 +34139,8 @@ function formatTimezoneShort(offset, dirtyDelimeter) {
     return sign + String(hours);
   }
 
-  var delimeter = dirtyDelimeter || '';
-  return sign + String(hours) + delimeter + addLeadingZeros(minutes, 2);
+  var delimiter = dirtyDelimiter || '';
+  return sign + String(hours) + delimiter + addLeadingZeros(minutes, 2);
 }
 
 var _default = formatters;
@@ -34453,6 +34451,8 @@ var tzFormattingTokensRegExp = /([xXOz]+)|''|'(''|[^'])+('|$)/g;
  *   - Some of the local week-numbering year tokens (`YY`, `YYYY`) that are confused with the calendar year tokens
  *   (`yy`, `yyyy`). See: https://git.io/fxCyr
  * @param {String} [options.timeZone=''] - used to specify the IANA time zone offset of a date String.
+ * @param {Date|Number} [options.originalDate] - can be used to pass the original unmodified date to `format` to
+ *   improve correctness of the replaced timezone token close to the DST threshold.
  * @returns {String} the formatted date string
  * @throws {TypeError} 2 arguments required
  * @throws {RangeError} `options.additionalDigits` must be 0, 1 or 2
@@ -34488,7 +34488,7 @@ function format(dirtyDate, dirtyFormatStr, dirtyOptions) {
   var matches = formatStr.match(tzFormattingTokensRegExp);
 
   if (matches) {
-    var date = (0, _index3.default)(dirtyDate, options); // Work through each match and replace the tz token in the format string with the quoted
+    var date = (0, _index3.default)(options.originalDate || dirtyDate, options); // Work through each match and replace the tz token in the format string with the quoted
     // formatted time zone so the remaining tokens can be filled in by date-fns#format.
 
     formatStr = matches.reduce(function (result, token) {
@@ -34556,6 +34556,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function formatInTimeZone(date, timeZone, formatStr, options) {
   var extendedOptions = (0, _index.default)(options);
   extendedOptions.timeZone = timeZone;
+  extendedOptions.originalDate = date;
   return (0, _index2.default)((0, _index3.default)(date, timeZone), formatStr, extendedOptions);
 }
 
