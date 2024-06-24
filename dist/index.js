@@ -25,7 +25,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getSlackFormat = exports.getMarkdownFormat = exports.getPlainTextFormat = void 0;
+exports.getPlainTextFormat = getPlainTextFormat;
+exports.getMarkdownFormat = getMarkdownFormat;
+exports.getSlackFormat = getSlackFormat;
 const github_1 = __nccwpck_require__(5438);
 const date_fns_tz_1 = __nccwpck_require__(9297);
 const pupa_1 = __importDefault(__nccwpck_require__(7491));
@@ -61,7 +63,6 @@ function getPlainTextFormat(commits) {
     }
     return lines.join('\n');
 }
-exports.getPlainTextFormat = getPlainTextFormat;
 function getMarkdownFormat(commits) {
     const lines = [];
     for (const commit of commits) {
@@ -69,7 +70,6 @@ function getMarkdownFormat(commits) {
     }
     return lines.join('\n');
 }
-exports.getMarkdownFormat = getMarkdownFormat;
 function getSlackFormat(commits, since, until, slackTemplate) {
     const lines = [];
     for (const commit of commits) {
@@ -128,7 +128,6 @@ function getSlackFormat(commits, since, until, slackTemplate) {
     };
     return JSON.stringify(result);
 }
-exports.getSlackFormat = getSlackFormat;
 
 
 /***/ }),
