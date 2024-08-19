@@ -53,7 +53,7 @@ async function getPreviousTag(octokit: InstanceType<typeof GitHub>, notThis: str
     }
 
     return ''
-  } catch (e) {
+  } catch (_) {
     return ''
   }
 }
