@@ -210,7 +210,7 @@ async function getPreviousTag(octokit, notThis) {
         }
         return '';
     }
-    catch (e) {
+    catch (_) {
         return '';
     }
 }
