@@ -32,6 +32,11 @@ Three different output formats are supplied, plain text, Markdown and for Slack.
     # Default: true
     chronological: ''
 
+    # Channel ID to include in the Slack payload
+    #
+    # Default: ''
+    slack channel: ''
+
     # Template for the message to be included before the list of changes to Slack.
     #
     # Supports Markdown and makes the following variables available:

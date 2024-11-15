@@ -70,7 +70,7 @@ function getMarkdownFormat(commits) {
     }
     return lines.join('\n');
 }
-function getSlackFormat(commits, since, until, slackTemplate) {
+function getSlackFormat(commits, since, until, slackTemplate, slackChannel) {
     const lines = [];
     for (const commit of commits) {
         lines.push(`<${commit.html_url}|\`${getShortRef(commit.sha)}\`> ${formatMessage(commit.commit.message, true)} (${getAuthor(commit)})`);
@@ -88,6 +88,7 @@ function getSlackFormat(commits, since, until, slackTemplate) {
     }
     const now = new Date();
     const result = {
+        channel: slackChannel,
         blocks: [
             {
                 type: 'section',
@@ -243,7 +244,7 @@ async function run() {
     }
     core.setOutput('plain-text', formatting.getPlainTextFormat(commits));
     core.setOutput('markdown', formatting.getMarkdownFormat(commits));
-    core.setOutput('slack', formatting.getSlackFormat(commits, since, until, core.getInput('slack template')));
+    core.setOutput('slack', formatting.getSlackFormat(commits, since, until, core.getInput('slack template'), core.getInput('slack channel')));
 }
 run();
 
