@@ -72,7 +72,13 @@ export function getMarkdownFormat(commits: Commit[]): string {
   return lines.join('\n')
 }
 
-export function getSlackFormat(commits: Commit[], since: string, until: string, slackTemplate: string): string {
+export function getSlackFormat(
+  commits: Commit[],
+  since: string,
+  until: string,
+  slackTemplate: string,
+  slackChannel: string
+): string {
   const lines = []
 
   for (const commit of commits) {
@@ -101,6 +107,7 @@ export function getSlackFormat(commits: Commit[], since: string, until: string, 
   const now = new Date()
 
   const result = {
+    channel: slackChannel,
     blocks: [
       {
         type: 'section',

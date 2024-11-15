@@ -18,6 +18,9 @@ inputs:
   chronological:
     description: Output changes in chronological order
     default: true
+  slack channel:
+    description: Channel ID to include in the Slack message payload
+    default: ""
   slack template:
     description: |
       Message template to be used for line above the Slack output.

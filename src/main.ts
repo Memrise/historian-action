@@ -98,7 +98,10 @@ async function run(): Promise<void> {
 
   core.setOutput('plain-text', formatting.getPlainTextFormat(commits))
   core.setOutput('markdown', formatting.getMarkdownFormat(commits))
-  core.setOutput('slack', formatting.getSlackFormat(commits, since, until, core.getInput('slack template')))
+  core.setOutput(
+    'slack',
+    formatting.getSlackFormat(commits, since, until, core.getInput('slack template'), core.getInput('slack channel'))
+  )
 }
 
 run()
