@@ -5,12 +5,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    reviewers:
-      - Tenzer
 
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-    reviewers:
-      - Tenzer
