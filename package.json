@@ -34,7 +34,7 @@
   "devDependencies": {
     "@types/node": "^24.0.1",
     "@types/rewire": "^2.5.30",
-    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/eslint-plugin": "^8.34.0",
     "@typescript-eslint/parser": "^8.34.0",
     "@vercel/ncc": "^0.38.3",
     "eslint": "^8.57.1",
