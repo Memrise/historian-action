@@ -35,7 +35,7 @@
     "@types/node": "^24.2.1",
     "@types/rewire": "^2.5.30",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
-    "@typescript-eslint/parser": "^8.37.0",
+    "@typescript-eslint/parser": "^8.39.1",
     "@vercel/ncc": "^0.38.3",
     "eslint": "^8.57.1",
     "eslint-plugin-github": "^5.1.8",
