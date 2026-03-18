@@ -15,11 +15,10 @@
  */
 
 import * as core from '@actions/core'
-import * as formatting from './formatting'
+import * as formatting from './formatting.js'
 import {context, getOctokit} from '@actions/github'
-import {GitHub} from '@actions/github/lib/utils'
 
-async function resolveHead(octokit: InstanceType<typeof GitHub>): Promise<string> {
+async function resolveHead(octokit) {
   const {data} = await octokit.rest.repos.getCommit({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -29,7 +28,7 @@ async function resolveHead(octokit: InstanceType<typeof GitHub>): Promise<string
   return data.sha
 }
 
-async function getPreviousTag(octokit: InstanceType<typeof GitHub>, notThis: string): Promise<string> {
+async function getPreviousTag(octokit, notThis) {
   /*
    * This assumes undocumented behaviour from GitHub's API,
    * where the tags are returned in reverse chronological order.
@@ -53,12 +52,12 @@ async function getPreviousTag(octokit: InstanceType<typeof GitHub>, notThis: str
     }
 
     return ''
-  } catch (_) {
+  } catch {
     return ''
   }
 }
 
-async function run(): Promise<void> {
+async function run() {
   const octokit = getOctokit(core.getInput('token', {required: true}))
 
   // Resolve HEAD to a commit if that was passed as input
@@ -104,4 +103,4 @@ async function run(): Promise<void> {
   )
 }
 
-run()
+void run()

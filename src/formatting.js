@@ -14,41 +14,41 @@
  * limitations under the License.
  */
 
-import {Commit} from './interfaces'
 import {context} from '@actions/github'
 import {formatInTimeZone} from 'date-fns-tz'
 import pupa from 'pupa'
 
-function firstLine(input: string): string {
+function firstLine(input) {
   return input.split('\n')[0]
 }
 
-function getPullRequestUrl(pull_id: string): string {
+function getPullRequestUrl(pull_id) {
   return `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/pull/${pull_id}`
 }
 
-function formatMessage(input: string, slackLinks: boolean): string {
-  return firstLine(input).replace(/#(\d+)/, (match, p1) => {
-    if (slackLinks) return `<${getPullRequestUrl(p1)}|#${p1}>`
-    return `[#${p1}](${getPullRequestUrl(p1)})`
+function formatMessage(input, slackLinks) {
+  return firstLine(input).replace(/#(\d+)/, (match, pull_request_id) => {
+    const pull_request_url = getPullRequestUrl(pull_request_id)
+    if (slackLinks) return `<${pull_request_url}|#${pull_request_id}>`
+    return `[#${pull_request_id}](${pull_request_url})`
   })
 }
 
-function getAuthor(commit: Commit): string {
+function getAuthor(commit) {
   if (commit.commit.author && commit.commit.author.name) {
     return commit.commit.author.name
   }
   return 'Unknown'
 }
 
-function getShortRef(ref: string): string {
+function getShortRef(ref) {
   if (ref.match(/[\da-fA-F]{40}/)) {
     return ref.substring(0, 10)
   }
   return ref
 }
 
-export function getPlainTextFormat(commits: Commit[]): string {
+export function getPlainTextFormat(commits) {
   const lines = []
 
   for (const commit of commits) {
@@ -58,7 +58,7 @@ export function getPlainTextFormat(commits: Commit[]): string {
   return lines.join('\n')
 }
 
-export function getMarkdownFormat(commits: Commit[]): string {
+export function getMarkdownFormat(commits) {
   const lines = []
 
   for (const commit of commits) {
@@ -72,13 +72,7 @@ export function getMarkdownFormat(commits: Commit[]): string {
   return lines.join('\n')
 }
 
-export function getSlackFormat(
-  commits: Commit[],
-  since: string,
-  until: string,
-  slackTemplate: string,
-  slackChannel: string
-): string {
+export function getSlackFormat(commits, since, until, slackTemplate, slackChannel) {
   const lines = []
 
   for (const commit of commits) {
