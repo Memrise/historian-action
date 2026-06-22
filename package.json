@@ -26,9 +26,8 @@
   "dependencies": {
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
-    "date-fns": "^4.1.0",
-    "date-fns-tz": "^3.2.0",
-    "pupa": "^3.3.0"
+    "pupa": "^3.3.0",
+    "temporal-polyfill": "^1.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
