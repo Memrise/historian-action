@@ -15,8 +15,8 @@
  */
 
 import {context} from '@actions/github'
-import {formatInTimeZone} from 'date-fns-tz'
 import pupa from 'pupa'
+import 'temporal-polyfill/global'
 
 function firstLine(input) {
   return input.split('\n')[0]
@@ -98,7 +98,7 @@ export function getSlackFormat(commits, since, until, slackTemplate, slackChanne
     )
   }
 
-  const now = new Date()
+  const now = Temporal.Now.zonedDateTimeISO('UTC')
 
   const result = {
     channel: slackChannel,
@@ -108,13 +108,13 @@ export function getSlackFormat(commits, since, until, slackTemplate, slackChanne
         text: {
           type: 'mrkdwn',
           text: pupa(slackTemplate, {
-            date: formatInTimeZone(now, 'UTC', 'yyyy-MM-dd'),
+            date: now.toPlainDate().toString(),
             since: {
               full: since,
               short: getShortRef(since)
             },
-            time: formatInTimeZone(now, 'UTC', 'HH:mm:ss'),
-            timeNoSeconds: formatInTimeZone(now, 'UTC', 'HH:mm'),
+            time: now.toPlainTime().toString({smallestUnit: 'second'}),
+            timeNoSeconds: now.toPlainTime().toString({smallestUnit: 'minute'}),
             until: {
               full: until,
               short: getShortRef(until)
